@@ -65,9 +65,37 @@ document.addEventListener("DOMContentLoaded", () => {
             avatar.className = "participant-avatar";
             avatar.textContent = getInitials(p);
 
+            // Botón eliminar
+            const deleteBtn = document.createElement("button");
+            deleteBtn.className = "delete-participant-btn";
+            deleteBtn.title = "Eliminar participante";
+            deleteBtn.innerHTML = "🗑️";
+            deleteBtn.style.marginLeft = "8px";
+            deleteBtn.style.background = "none";
+            deleteBtn.style.border = "none";
+            deleteBtn.style.cursor = "pointer";
+            deleteBtn.style.fontSize = "18px";
+            deleteBtn.addEventListener("click", async (e) => {
+              e.stopPropagation();
+              if (confirm(`¿Eliminar a ${nameSpan.textContent}?`)) {
+                try {
+                  const response = await fetch(`/activities/${encodeURIComponent(name)}/signup?email=${encodeURIComponent(p)}`, {
+                    method: "DELETE",
+                  });
+                  if (response.ok) {
+                    fetchActivities();
+                  } else {
+                    alert("No se pudo eliminar al participante.");
+                  }
+                } catch (err) {
+                  alert("Error de red al eliminar participante.");
+                }
+              }
+            });
             const nameSpan = document.createElement("span");
             nameSpan.className = "participant-name";
             // Mostrar nombre legible: si es email, mostrar parte antes de @, sino mostrar tal cual
+            li.appendChild(deleteBtn);
             nameSpan.textContent = p.includes("@") ? p.split("@")[0] : p;
 
             li.appendChild(avatar);
@@ -116,12 +144,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const result = await response.json();
 
       if (response.ok) {
-        messageDiv.textContent = result.message;
-        messageDiv.className = "success";
-        signupForm.reset();
-        // refrescar lista para mostrar nuevo participante (opcional)
-        activitySelect.innerHTML = '<option value="">-- Select an activity --</option>';
-        fetchActivities();
+  messageDiv.textContent = result.message;
+  messageDiv.className = "success";
+  signupForm.reset();
+  // Refrescar lista y selector, reiniciando el selector
+  fetchActivities();
+  activitySelect.value = "";
       } else {
         messageDiv.textContent = result.detail || "An error occurred";
         messageDiv.className = "error";
